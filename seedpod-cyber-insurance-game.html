@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SeedPod Cyber Coverage: The Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --seedpod-green:#00844A;
+      --seedpod-light:#10B981;
+      --seedpod-gold:#FDB827;
+      --slate:#0f172a;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;overflow-x:hidden}
+    body{
+      background:linear-gradient(180deg,var(--slate),#0b1020);
+      color:#e5e7eb;
+      font-family:Inter,system-ui,sans-serif;
+    }
+    .wrap{max-width:1100px;margin:12px auto;padding:0 12px}
+    header.app{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+    .brand{display:flex;align-items:center;gap:8px}
+    .brand .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--seedpod-green),var(--seedpod-light));border:2px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:20px}
+    .brand h1{font-weight:800;font-size:16px;line-height:1.2}
+    .brand .sub{font-size:10px;color:#cbd5e1;margin-top:2px}
+    .stats,.controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .pill{background:#0b1430;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 8px;font-size:11px;white-space:nowrap}
+    .btn{background:var(--seedpod-green);border:1px solid rgba(255,255,255,.15);color:white;border-radius:8px;padding:6px 10px;font-weight:600;cursor:pointer;font-size:12px;transition:background .2s}
+    .btn:hover{background:var(--seedpod-light)}
+    .btn.alt{background:#0b1430}
+    .btn.gold{background:var(--seedpod-gold);color:#1a1a1a}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin:12px 0}
+    .board{position:relative;width:100%;max-width:624px;aspect-ratio:13/12;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.10);box-shadow:0 12px 40px rgba(0,0,0,.35);touch-action:none}
+    .goal{position:absolute;top:0;left:0;right:0;height:8.33%;display:grid;place-items:center;background:linear-gradient(90deg,rgba(16,185,129,.25),rgba(16,185,129,.12));color:#d1fae5;border-bottom:1px dashed rgba(16,185,129,.5);text-transform:uppercase;font-size:10px;letter-spacing:.08em}
+    .grid-row{position:absolute;left:0;right:0;height:8.33%;border-top:1px solid rgba(255,255,255,.06)}
+    .grid-row:nth-child(odd){background:rgba(255,255,255,.02)}
+    .lane-label{position:absolute;left:8px;top:2px;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#9fb3d6}
+    .hazard,.player{position:absolute;width:8.33%;height:8.33%;display:grid;place-items:center;border-radius:8px;font-size:16px;font-weight:800;box-shadow:0 6px 12px rgba(0,0,0,.3)}
+    .hazard{transition:opacity .3s,filter .3s}
+    .player{background:linear-gradient(135deg,var(--seedpod-light),var(--seedpod-green));color:white;transition:left .12s ease,top .12s ease}
+    .mobile-controls{display:grid;grid-template-areas:"up up up" "left pause right" "down down down";gap:8px;max-width:220px;margin:0 auto}
+    .mobile-controls .btn{padding:12px;font-size:18px;min-height:50px;touch-action:manipulation}
+    .btn-up{grid-area:up}
+    .btn-left{grid-area:left}
+    .btn-pause{grid-area:pause}
+    .btn-right{grid-area:right}
+    .btn-down{grid-area:down}
+    .legend-title{text-align:center;font-size:14px;color:var(--seedpod-light);margin:16px 0 8px 0;font-weight:600}
+    .legend{display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:12px}
+    @media (min-width:500px){
+      .legend{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (min-width:768px){
+      .legend{grid-template-columns:repeat(3,1fr)}
+      .mobile-controls{display:none}
+    }
+    .legend .chip{border-radius:10px;padding:8px;border:1px solid rgba(255,255,255,.14);font-size:11px;line-height:1.3}
+    .foot{font-size:11px;color:#9aa6bf;margin-top:8px;text-align:center;line-height:1.4}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100;backdrop-filter:blur(2px)}
+    .card{background:rgba(11,20,48,0.98);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:16px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:#0b1430;border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:12px;font-size:12px;z-index:1000}
+    @keyframes shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    @keyframes float-up{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-40px);opacity:0}}
+    @keyframes flash-green{0%,100%{background:linear-gradient(180deg,var(--slate),#0b1020)}50%{background:linear-gradient(180deg,rgba(16,185,129,0.1),rgba(16,185,129,0.05))}}
+    @keyframes flash-red{0%,100%{background:linear-gradient(180deg,var(--slate),#0b1020)}50%{background:linear-gradient(180deg,rgba(239,68,68,0.15),rgba(239,68,68,0.08))}}
+    .shake{animation:shake 0.4s ease-in-out}
+    .pulse{animation:pulse 0.6s ease-in-out infinite}
+    .flash-green{animation:flash-green 0.5s ease-in-out}
+    .flash-red{animation:flash-red 0.5s ease-in-out}
+    .coin-particle{position:fixed;font-size:20px;font-weight:800;color:var(--seedpod-light);pointer-events:none;animation:float-up 1s ease-out forwards;text-shadow:0 2px 4px rgba(0,0,0,0.4)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="app">
+      <div class="brand">
+        <div class="logo">SP</div>
+        <div>
+          <h1>SeedPod <span style="color:var(--seedpod-light)">Cyber</span>: <span style="color:var(--seedpod-gold)">The Game</span></h1>
+          <div class="sub">Navigate Policy Pitfalls</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="pill" id="levelPill">Level 1</div>
+        <div class="pill" id="scorePill">Score 0</div>
+        <div class="pill" id="livesPill">Lives 3</div>
+        <div class="pill" id="coinsPill">Coins 0</div>
+      </div>
+      <div class="controls">
+        <button class="btn alt" id="pauseBtn">Pause</button>
+        <button class="btn gold" id="shopBtn">Shop</button>
+        <button class="btn alt" id="resetBtn">Reset</button>
+      </div>
+    </header>
+
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <div class="goal">Goal: Payout &amp; Recovery</div>
+      </div>
+      
+      <div class="mobile-controls">
+        <button class="btn btn-up" id="btnUp">↑</button>
+        <button class="btn btn-left" id="btnLeft">←</button>
+        <button class="btn alt btn-pause" id="btnPause">⏸</button>
+        <button class="btn btn-right" id="btnRight">→</button>
+        <button class="btn btn-down" id="btnDown">↓</button>
+      </div>
+    </div>
+
+    <div class="foot">Desktop: Arrow Keys/WASD/Space • Mobile: Swipe or use buttons</div>
+
+    <div class="legend-title">📚 Policy Elements - Study These!</div>
+    <section class="legend">
+      <div class="chip" style="background:rgba(239,68,68,.18)">🚗 Definitions - Terms deny claims</div>
+      <div class="chip" style="background:rgba(245,158,11,.18)">🪙 Sublimits - Hard caps per category</div>
+      <div class="chip" style="background:rgba(217,70,239,.18)">⚡ Exclusions - Coverage killers</div>
+      <div class="chip" style="background:rgba(2,132,199,.18)">🔗 Vendors - Need Contingent BI</div>
+      <div class="chip" style="background:rgba(148,163,184,.18)">⏱️ Response - Notify within 24-72hrs</div>
+    </section>
+  </div>
+
+  <div class="modal" id="welcome" style="display:none">
+    <div class="card">
+      <h3 style="margin:0 0 8px 0">Welcome to SeedPod Cyber Coverage</h3>
+      <p style="margin:8px 0;font-size:14px;line-height:1.5">Navigate 5 policy lanes → answer coverage questions → earn coins → buy protection. Correct = pass through. Wrong = pay 5 coins or lose a life.</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button class="btn gold" id="welcomeNext">Next: Lane Briefing →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="briefing" style="display:none">
+    <div class="card">
+      <h3 style="margin:0 0 12px 0;color:var(--seedpod-light)">📋 Lane Briefing - Study These!</h3>
+      <div style="display:grid;gap:10px">
+        <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#fca5a5">🚗 Definitions</div>
+          <div style="font-size:12px;line-height:1.4;color:#e5e7eb">Policy terms aren't standard. Narrow definitions deny claims.</div>
+        </div>
+        <div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#fbbf24">🪙 Sublimits</div>
+          <div style="font-size:12px;line-height:1.4;color:#e5e7eb">$2M limit? Forensics may cap at $100K. Check sublimits.</div>
+        </div>
+        <div style="background:rgba(217,70,239,.12);border:1px solid rgba(217,70,239,.3);border-radius:10px;padding:10px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#e879f9">⚡ Exclusions</div>
+          <div style="font-size:12px;line-height:1.4;color:#e5e7eb">Failure to maintain controls, war, known vulns kill claims.</div>
+        </div>
+        <div style="background:rgba(2,132,199,.12);border:1px solid rgba(2,132,199,.3);border-radius:10px;padding:10px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#38bdf8">🔗 Vendors</div>
+          <div style="font-size:12px;line-height:1.4;color:#e5e7eb">SIS, email, payment vendors need Contingent BI coverage.</div>
+        </div>
+        <div style="background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.3);border-radius:10px;padding:10px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#94a3b8">⏱️ Response</div>
+          <div style="font-size:12px;line-height:1.4;color:#e5e7eb">Notify carrier within 24-72hrs. Delays jeopardize coverage.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn gold" id="briefingStart">Start Game →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="quiz" style="display:none">
+    <div class="card">
+      <h3 style="margin:0 0 8px 0;font-size:16px">🎯 Coverage Question</h3>
+      <p id="quizQ" style="margin:8px 0;font-size:14px;line-height:1.5"></p>
+      <div id="quizChoices"></div>
+      <p id="quizExplain" style="font-size:12px;color:#9aa6bf;margin-top:8px"></p>
+    </div>
+  </div>
+
+  <div class="modal" id="shop" style="display:none">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3 style="font-size:17px">🛡️ Shop</h3>
+        <div class="pill">Coins: <span id="shopCoins">0</span></div>
+      </div>
+      <div id="shopItems" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button class="btn alt" id="shopClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="end" style="display:none;background:rgba(0,0,0,0.75)">
+    <div class="card" style="text-align:center">
+      <div id="endTitle" style="font-size:26px;margin-bottom:6px">🏆 WIN</div>
+      <div id="endBody" style="font-size:14px;color:#cbd5e1"></div>
+      <div style="margin-top:10px"><button class="btn" id="playAgain">Play Again</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" style="display:none"></div>
+
+  <script>
+const GRID_COLS=13,GRID_ROWS=12;
+const board=document.getElementById('board');
+const levelPill=document.getElementById('levelPill');
+const scorePill=document.getElementById('scorePill');
+const livesPill=document.getElementById('livesPill');
+const coinsPill=document.getElementById('coinsPill');
+
+const laneLabels=["START","DEFINITIONS","SUBLIMITS","EXCLUSIONS","VENDORS","RESPONSE"];
+for(let r=0;r<GRID_ROWS;r++){
+  const row=document.createElement('div');
+  row.className='grid-row';
+  row.style.top=((r/GRID_ROWS)*100)+'%';
+  if(r<=5){
+    const lbl=document.createElement('div');
+    lbl.className='lane-label';
+    lbl.textContent=laneLabels[r];
+    row.appendChild(lbl);
+  }
+  board.appendChild(row);
+}
+
+let level=1,lives=3,coins=0,score=0,paused=true,goalReached=false;
+let inventory=[],hazards=[],player={x:Math.floor(GRID_COLS/2),y:GRID_ROWS-1};
+let currentHazard=null,correct=0,total=0,penalties=0;
+
+const QUIZ={
+  definitions:[
+    {q:"SIS vendor breached. Policy: 'systems OWNED or OPERATED by Named Insured.' Covered?",choices:[{t:"Yes - we use it",ok:false},{t:"No - vendor owns it",ok:true}],explain:"'Operated' means direct control. Need 'Outsourced Provider' language."},
+    {q:"Names+emails leaked. Policy PII: 'name + SSN/financial.' Covered?",choices:[{t:"Yes - student data",ok:false},{t:"No - definition not met",ok:true}],explain:"Narrow PII definitions exclude email-only breaches."},
+    {q:"Policy defines 'Security Failure' as 'unauthorized access.' Accidental deletion by IT. Covered?",choices:[{t:"No - authorized user",ok:true},{t:"Yes - data loss covered",ok:false}],explain:"Definitions matter. Insider mistakes may not qualify."},
+    {q:"Policy covers 'Privacy Events' = 'unauthorized disclosure of PII.' Records to wrong parent. Covered?",choices:[{t:"Yes - unauthorized disclosure",ok:true},{t:"No - sent by employee",ok:false}],explain:"'Unauthorized disclosure' includes mistakes."},
+    {q:"W-2s stolen in break-in. Policy: 'electronic data breaches only.' Covered?",choices:[{t:"No - physical theft",ok:true},{t:"Yes - employee data",ok:false}],explain:"Electronic-only policies exclude paper theft."}
+  ],
+  sublimits:[
+    {q:"$2M limit. Forensics sublimit $100K. Costs: $85K forensics + $200K notification. Pays?",choices:[{t:"$285K",ok:false},{t:"$185K capped",ok:true}],explain:"Sublimits are hard caps per category."},
+    {q:"$1M limit. Ransom sublimit $50K. Demand $75K. Policy pays?",choices:[{t:"$50K - sublimit caps",ok:true},{t:"$75K - under limit",ok:false}],explain:"Sublimits override headline limit."},
+    {q:"$3M limit. Crisis Mgmt $25K per occurrence. 3 breaches this year. Max?",choices:[{t:"$75K - $25K×3",ok:true},{t:"$25K - per period",ok:false}],explain:"'Per occurrence' sublimits reset each incident."}
+  ],
+  exclusions:[
+    {q:"Ransom demand. Policy excludes extortion. Recover ransom?",choices:[{t:"No - excluded",ok:false},{t:"Check cyber extortion carveout",ok:true}],explain:"Policies often exclude extortion BUT carve back ransomware."},
+    {q:"Trip-and-fall during ransomware evacuation. Medical bills covered?",choices:[{t:"No - bodily injury excluded",ok:true},{t:"Yes - caused by cyber",ok:false}],explain:"Cyber policies exclude bodily injury. Need GL."},
+    {q:"Hacker has nation-state ties. Carrier cites 'acts of war' exclusion. Outcome?",choices:[{t:"Litigation - war ambiguous",ok:true},{t:"Denied - state = war",ok:false}],explain:"War exclusions contested in cyber (NotPetya)."}
+  ],
+  vendors:[
+    {q:"Google Workspace breach. Policy: 'Dependent BI.' Claim?",choices:[{t:"Yes - we depend on it",ok:false},{t:"Only if Google qualifies",ok:true}],explain:"DBI needs written contracts with specific providers."},
+    {q:"Transportation vendor breached. Parents sue. Policy: first-party only. Lawsuit covered?",choices:[{t:"No - third-party not covered",ok:true},{t:"Yes - vendor breach",ok:false}],explain:"First-party = YOUR losses. Need separate for liability."},
+    {q:"Payroll processor breached. Policy covers 'Outsourced Providers.' Vendor's losses covered?",choices:[{t:"No - only YOUR losses",ok:true},{t:"Yes - they're outsourced",ok:false}],explain:"OSP protects YOU from THEIR breach."}
+  ],
+  response:[
+    {q:"Ransomware Fri 5pm. Notify Mon 9am. Policy: 'prompt notice.' Risk?",choices:[{t:"OK - next business day",ok:false},{t:"Coverage jeopardy - 24-72hrs",ok:true}],explain:"'Prompt' doesn't pause for weekends."},
+    {q:"Breach occurs. Policy: 'notify immediately.' Wait 1 week to assess. Impact?",choices:[{t:"Jeopardizes coverage",ok:true},{t:"Reasonable - need facts",ok:false}],explain:"'Immediately' means immediately. Document delays."},
+    {q:"Policy has breach coach list. Call carrier hotline or hire own lawyer first?",choices:[{t:"Call carrier - pre-approved",ok:true},{t:"Own lawyer - independence",ok:false}],explain:"Use carrier's counsel to maximize coverage."}
+  ]
+};
+
+const SHOP=[
+  {id:"social",name:"Social Eng",desc:"Fraud coverage",cost:3,protects:["car"]},
+  {id:"bi",name:"Ext BI",desc:"Longer outages",cost:4,protects:["mud"]},
+  {id:"excl",name:"Exclusion Buyback",desc:"Maintain failures",cost:5,protects:["laser"]},
+  {id:"vendor",name:"Contingent BI",desc:"Vendor breaches",cost:4,protects:["vendor"]},
+  {id:"ir",name:"IR Retainer",desc:"Fast response",cost:3,protects:["clock"]}
+];
+
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+function makeHazards(lv){
+  const hz=[];
+  for(let lane=1;lane<=5;lane++){
+    const count=3+Math.min(lv,2);
+    for(let i=0;i<count;i++){
+      hz.push({lane,x:Math.random()*GRID_COLS,dir:Math.random()<.5?-1:1,speed:(0.8+lv*0.2)*(.7+Math.random()*.7),type:lane===3?"laser":lane===2?"mud":lane===4?"vendor":lane===5?"clock":"car",el:null,passed:false});
+    }
+  }
+  return hz;
+}
+
+function updateHUD(){
+  score=(correct*100)+(coins*10)+(lives*500)-(penalties*50);
+  levelPill.textContent="Level "+level;
+  scorePill.textContent="Score "+score.toLocaleString();
+  livesPill.textContent="Lives "+lives;
+  coinsPill.textContent="Coins "+coins;
+  document.getElementById('shopCoins').textContent=coins;
+}
+
+function showToast(t){
+  const el=document.getElementById('toast');
+  el.textContent=t;
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none',1200);
+}
+
+function flashScreen(type){
+  document.body.classList.add(type==='correct'?'flash-green':'flash-red');
+  setTimeout(()=>{document.body.classList.remove('flash-green','flash-red')},500);
+}
+
+function spawnCoinParticles(amt,x,y){
+  for(let i=0;i<Math.min(amt,3);i++){
+    const p=document.createElement('div');
+    p.className='coin-particle';
+    p.textContent='+'+(amt/Math.min(amt,3)|0);
+    p.style.left=(x+Math.random()*40-20)+'px';
+    p.style.top=(y+Math.random()*20-10)+'px';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),1000);
+  }
+}
+
+function checkCoverage(type){
+  return SHOP.some(s=>inventory.includes(s.id)&&s.protects.includes(type));
+}
+
+function resetPosition(){
+  player={x:Math.floor(GRID_COLS/2),y:GRID_ROWS-1};
+  positionPlayer();
+}
+
+function openQuiz(q,hazard){
+  currentHazard=hazard;
+  total++;
+  document.getElementById('quizQ').textContent=q.q;
+  document.getElementById('quizExplain').textContent="";
+  const choices=document.getElementById('quizChoices');
+  choices.innerHTML="";
+  
+  q.choices.forEach(c=>{
+    const b=document.createElement('button');
+    b.className="btn alt";
+    b.style="display:block;width:100%;text-align:left;margin:4px 0;padding:8px;font-size:13px";
+    b.textContent=c.t;
+    b.onclick=()=>{
+      if(c.ok){
+        correct++;
+        const reward=2+Math.floor(level/2);
+        coins+=reward;
+        flashScreen('correct');
+        const rect=board.getBoundingClientRect();
+        spawnCoinParticles(reward,rect.left+rect.width/2,rect.top+100);
+        showToast('✓ Correct! +'+reward);
+        updateHUD();
+        document.getElementById('quizExplain').textContent="✓ "+q.explain;
+        document.getElementById('quizExplain').style.color="#86efac";
+        if(currentHazard)currentHazard.passed=true;
+        
+        choices.innerHTML="";
+        const continueBtn=document.createElement('button');
+        continueBtn.className="btn gold";
+        continueBtn.textContent="Continue Playing →";
+        continueBtn.style="display:block;width:100%;margin-top:8px;padding:10px;font-size:14px";
+        continueBtn.onclick=()=>closeQuiz();
+        choices.appendChild(continueBtn);
+      }else{
+        document.body.classList.add('shake');
+        setTimeout(()=>document.body.classList.remove('shake'),400);
+        flashScreen('wrong');
+        document.getElementById('quizExplain').textContent="✗ "+q.explain;
+        document.getElementById('quizExplain').style.color="#fca5a5";
+        
+        const hasCoverage=checkCoverage(hazard.type);
+        if(hasCoverage){
+          showToast("✓ Coverage protects!");
+          currentHazard.passed=true;
+          
+          choices.innerHTML="";
+          const continueBtn=document.createElement('button');
+          continueBtn.className="btn gold";
+          continueBtn.textContent="Continue Playing →";
+          continueBtn.style="display:block;width:100%;margin-top:8px;padding:10px;font-size:14px";
+          continueBtn.onclick=()=>closeQuiz();
+          choices.appendChild(continueBtn);
+        }else if(coins>=5){
+          choices.innerHTML="";
+          const pay=document.createElement('button');
+          pay.className="btn gold";
+          pay.textContent="Pay 5 Coins to Continue";
+          pay.style="display:block;width:100%;margin-top:6px;padding:8px";
+          pay.onclick=()=>{coins-=5;penalties++;updateHUD();showToast("Paid 5 coins");currentHazard.passed=true;closeQuiz()};
+          const lose=document.createElement('button');
+          lose.className="btn alt";
+          lose.textContent="Lose Life & Reset Position";
+          lose.style="display:block;width:100%;margin-top:4px;padding:8px";
+          lose.onclick=()=>{lives--;showToast("Claim Denied -1");updateHUD();resetPosition();closeQuiz();if(lives<=0)endGame(false)};
+          choices.appendChild(pay);
+          choices.appendChild(lose);
+        }else{
+          lives--;
+          showToast("Claim Denied -1");
+          updateHUD();
+          
+          choices.innerHTML="";
+          const continueBtn=document.createElement('button');
+          continueBtn.className="btn alt";
+          continueBtn.textContent="Continue (Life Lost)";
+          continueBtn.style="display:block;width:100%;margin-top:8px;padding:10px;font-size:14px";
+          continueBtn.onclick=()=>{resetPosition();closeQuiz();if(lives<=0)endGame(false)};
+          choices.appendChild(continueBtn);
+        }
+      }
+    };
+    choices.appendChild(b);
+  });
+  document.getElementById('quiz').style.display='flex';
+}
+
+function closeQuiz(){
+  document.getElementById('quiz').style.display='none';
+  paused=false;
+  document.getElementById('pauseBtn').textContent='Pause';
+}
+
+function openShop(){
+  const items=document.getElementById('shopItems');
+  items.innerHTML="";
+  SHOP.forEach(item=>{
+    const owned=inventory.includes(item.id);
+    const card=document.createElement('div');
+    card.style='background:#0b1430;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px';
+    const icons={car:'🚗',mud:'🪙',laser:'⚡',vendor:'🔗',clock:'⏱️'};
+    const prot=item.protects.map(t=>icons[t]).join(' ');
+    card.innerHTML=`<div style="font-weight:600;font-size:13px">${item.name}</div>
+      <div style="font-size:11px;color:#cbd5e1;margin:4px 0">${item.desc}</div>
+      ${prot?'<div style="font-size:10px;color:#86efac">'+prot+'</div>':''}
+      <div style="display:flex;justify-content:space-between;margin-top:6px">
+        <span style="font-size:11px">${item.cost} coins</span>
+        <button class="btn" ${owned||coins<item.cost?'disabled':''}>${owned?'Owned':'Buy'}</button>
+      </div>`;
+    const btn=card.querySelector('button');
+    btn.onclick=()=>{
+      if(coins>=item.cost&&!owned){coins-=item.cost;inventory.push(item.id);updateHUD();showToast("Purchased");openShop()}
+    };
+    items.appendChild(card);
+  });
+  document.getElementById('shop').style.display='flex';
+}
+
+function closeShop(){document.getElementById('shop').style.display='none'}
+
+function reset(){
+  level=1;lives=3;coins=0;score=0;paused=false;goalReached=false;inventory=[];correct=0;total=0;penalties=0;
+  hazards=makeHazards(1);
+  player={x:Math.floor(GRID_COLS/2),y:GRID_ROWS-1};
+  document.getElementById('pauseBtn').textContent='Pause';
+  document.getElementById('btnPause').textContent='⏸';
+  updateHUD();
+  renderHazards(true);
+  document.getElementById('end').style.display='none';
+}
+
+function endGame(win){
+  const acc=total>0?Math.round((correct/total)*100):0;
+  let grade='F';
+  if(acc>=90)grade='A+';else if(acc>=80)grade='A';else if(acc>=70)grade='B';else if(acc>=60)grade='C';else if(acc>=50)grade='D';
+  
+  document.getElementById('endTitle').textContent=win?"🏆 MASTERED":"💀 DENIED";
+  document.getElementById('endBody').innerHTML=`
+    <div style="font-size:18px;margin:10px 0"><strong style="color:var(--seedpod-light)">${score.toLocaleString()}</strong> points</div>
+    <div style="font-size:13px;line-height:1.6">
+      Grade: <strong>${grade}</strong> (${correct}/${total} = ${acc}%)<br>
+      Coins: ${coins} | Lives: ${lives} | Penalties: ${penalties}<br>
+      Coverage: ${inventory.length} items
+    </div>
+  `;
+  document.getElementById('end').style.display='flex';
+}
+
+function renderHazards(fresh){
+  document.querySelectorAll('.hazard').forEach(h=>h.remove());
+  hazards.forEach(h=>{
+    const el=document.createElement('div');
+    el.className='hazard';
+    let bg='#ef4444cc',glyph='🚗';
+    if(h.type==='mud'){bg='#f59e0bcc';glyph='🪙'}
+    if(h.type==='laser'){bg='#d946efcc';glyph='⚡'}
+    if(h.type==='vendor'){bg='#0284c7cc';glyph='🔗'}
+    if(h.type==='clock'){bg='#64748bcc';glyph='⏱️'}
+    el.style.background=bg;
+    el.textContent=glyph;
+    board.appendChild(el);
+    h.el=el;
+    positionHazard(h);
+  });
+  if(fresh){
+    let pe=document.getElementById('player');
+    if(!pe){pe=document.createElement('div');pe.id='player';pe.className='player';pe.textContent='🛡';board.appendChild(pe)}
+    positionPlayer();
+  }
+}
+
+function positionHazard(h){
+  const y=(100-(h.lane/(GRID_ROWS-1))*100)+'%';
+  const x=((h.x/GRID_COLS)*100)+'%';
+  h.el.style.top=y;
+  h.el.style.left=x;
+  if(h.passed){h.el.style.opacity='0.3';h.el.style.filter='grayscale(0.8)';h.el.classList.remove('pulse')}
+  else{h.el.style.opacity='1';h.el.style.filter='none';if(!h.el.classList.contains('pulse'))h.el.classList.add('pulse')}
+}
+
+function positionPlayer(){
+  const pe=document.getElementById('player');
+  pe.style.left=((player.x/GRID_COLS)*100)+'%';
+  pe.style.top=((player.y/GRID_ROWS)*100)+'%';
+}
+
+let lastTs=performance.now();
+function tick(ts){
+  const dt=(ts-lastTs)/1000;
+  lastTs=ts;
+  if(!paused){
+    hazards.forEach(h=>{
+      let nx=h.x+h.dir*h.speed*dt;
+      if(nx<-0.5)nx=GRID_COLS+0.5;
+      if(nx>GRID_COLS+0.5)nx=-0.5;
+      h.x=nx;
+      positionHazard(h);
+    });
+    
+    if(player.y===0&&!goalReached){
+      goalReached=true;
+      const bonus=3+level;
+      coins+=bonus;
+      flashScreen('correct');
+      const rect=board.getBoundingClientRect();
+      spawnCoinParticles(bonus,rect.left+rect.width/2,rect.top+50);
+      updateHUD();
+      showToast('Level '+level+' Complete! +'+bonus);
+      setTimeout(()=>{
+        level++;
+        if(level>5){endGame(true);return}
+        hazards=makeHazards(level);
+        renderHazards(true);
+        player={x:Math.floor(GRID_COLS/2),y:GRID_ROWS-1};
+        goalReached=false;
+        paused=false;
+      },600);
+    }
+    
+    const hit=hazards.find(h=>!h.passed&&Math.round(h.x)===player.x&&(GRID_ROWS-1-h.lane)===player.y);
+    if(hit&&document.getElementById('quiz').style.display!=='flex'){
+      hit.el.style.transform='scale(1.2)';
+      setTimeout(()=>{if(hit.el)hit.el.style.transform='scale(1)'},200);
+      
+      let laneKey='';
+      if(hit.lane===1)laneKey='definitions';
+      else if(hit.lane===2)laneKey='sublimits';
+      else if(hit.lane===3)laneKey='exclusions';
+      else if(hit.lane===4)laneKey='vendors';
+      else if(hit.lane===5)laneKey='response';
+      
+      const questions=QUIZ[laneKey]||[];
+      if(questions.length>0){
+        const q=questions[Math.floor(Math.random()*questions.length)];
+        paused=true;
+        document.getElementById('pauseBtn').textContent='Resume';
+        openQuiz(q,hit);
+      }
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+window.addEventListener('keydown',e=>{
+  if(['ArrowUp','KeyW'].includes(e.code)){e.preventDefault();player.y=clamp(player.y-1,0,GRID_ROWS-1)}
+  if(['ArrowDown','KeyS'].includes(e.code)){e.preventDefault();player.y=clamp(player.y+1,0,GRID_ROWS-1)}
+  if(['ArrowLeft','KeyA'].includes(e.code)){e.preventDefault();player.x=clamp(player.x-1,0,GRID_COLS-1)}
+  if(['ArrowRight','KeyD'].includes(e.code)){e.preventDefault();player.x=clamp(player.x+1,0,GRID_COLS-1)}
+  if(e.code==='Space'){e.preventDefault();paused=!paused;document.getElementById('pauseBtn').textContent=paused?'Resume':'Pause'}
+  positionPlayer();
+});
+
+let touchStartX=0,touchStartY=0;
+board.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  touchStartX=e.changedTouches[0].screenX;
+  touchStartY=e.changedTouches[0].screenY;
+});
+board.addEventListener('touchend',e=>{
+  e.preventDefault();
+  const dx=e.changedTouches[0].screenX-touchStartX;
+  const dy=e.changedTouches[0].screenY-touchStartY;
+  const threshold=20;
+  if(Math.abs(dx)>Math.abs(dy)){
+    if(Math.abs(dx)>threshold)player.x=clamp(player.x+(dx>0?1:-1),0,GRID_COLS-1);
+  }else{
+    if(Math.abs(dy)>threshold)player.y=clamp(player.y+(dy>0?1:-1),0,GRID_ROWS-1);
+  }
+  positionPlayer();
+});
+
+document.getElementById('pauseBtn').onclick=()=>{paused=!paused;document.getElementById('pauseBtn').textContent=paused?'Resume':'Pause'};
+document.getElementById('shopBtn').onclick=()=>openShop();
+document.getElementById('resetBtn').onclick=()=>reset();
+document.getElementById('shopClose').onclick=()=>closeShop();
+document.getElementById('playAgain').onclick=()=>{document.getElementById('end').style.display='none';reset()};
+
+document.getElementById('btnUp').onclick=()=>{player.y=clamp(player.y-1,0,GRID_ROWS-1);positionPlayer()};
+document.getElementById('btnDown').onclick=()=>{player.y=clamp(player.y+1,0,GRID_ROWS-1);positionPlayer()};
+document.getElementById('btnLeft').onclick=()=>{player.x=clamp(player.x-1,0,GRID_COLS-1);positionPlayer()};
+document.getElementById('btnRight').onclick=()=>{player.x=clamp(player.x+1,0,GRID_COLS-1);positionPlayer()};
+document.getElementById('btnPause').onclick=()=>{paused=!paused;document.getElementById('pauseBtn').textContent=paused?'Resume':'Pause';document.getElementById('btnPause').textContent=paused?'▶':'⏸'};
+
+document.getElementById('welcomeNext').onclick=()=>{
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('briefing').style.display='flex';
+};
+
+document.getElementById('briefingStart').onclick=()=>{
+  document.getElementById('briefing').style.display='none';
+  paused=false;
+  document.getElementById('pauseBtn').textContent='Pause';
+};
+
+hazards=makeHazards(1);
+renderHazards(true);
+updateHUD();
+
+setTimeout(()=>{document.getElementById('briefing').style.display='flex'},300);
+
+requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
