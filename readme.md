@@ -2,7 +2,8 @@
 
 An educational game teaching critical cyber insurance policy concepts through interactive gameplay.
 
-![SeedPod Cyber Logo](seedpod-cyber-logo.png)
+<img width="2345" height="570" alt="SeedPod_Logo__2_color_reverse" src="https://github.com/user-attachments/assets/641020b9-5891-40a9-ae0f-c3024e65c63f" />
+
 
 ## About
 
