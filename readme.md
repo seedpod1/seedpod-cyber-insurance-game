@@ -2,11 +2,13 @@
 
 An educational game teaching critical cyber insurance policy concepts through interactive gameplay.
 
-<img width="225" height="52" alt="SeedPod_Logo__2_color" src="https://github.com/user-attachments/assets/641020b9-5891-40a9-ae0f-c3024e65c63f" />
+<img width="225" height="52" alt="SeedPod_Logo__2_color_reverse" src="https://github.com/user-attachments/assets/641020b9-5891-40a9-ae0f-c3024e65c63f" />
 
+**[🎮 PLAY THE GAME NOW](https://seedpod1.github.io/seedpod-cyber-insurance-game/seedpod-cyber-insurance-game.html)**
+
+An educational game teaching critical cyber insurance policy concepts through interactive gameplay.
 
 ## About
-
 Navigate five policy lanes while answering coverage questions to master the hidden pitfalls in cyber insurance policies. This game was created by SeedPod Cyber to help insurance professionals, MSPs, and risk managers understand the nuances that can make or break a cyber insurance claim.
 
 ## What You'll Learn
@@ -46,14 +48,14 @@ Navigate five policy lanes while answering coverage questions to master the hidd
 
 ### Running the Game
 
-Simply open `seedpod-cyber-insurance-game.html` in any modern web browser. No installation or server required.
+Simply open `https://seedpod1.github.io/seedpod-cyber-insurance-game/seedpod-cyber-insurance-game.html` in any modern web browser. No installation or server required.
 
 ### Embedding
 
 You can embed this game in your website, LMS, or training materials:
 
 ```html
-<iframe src="seedpod-cyber-insurance-game.html" width="1200" height="900" frameborder="0"></iframe>
+<iframe src="seedpod1.github.io/seedpod-cyber-insurance-game/seedpod-cyber-insurance-game.html" width="1200" height="900" frameborder="0"></iframe>
 ```
 
 ### Customization
